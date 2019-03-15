@@ -90,8 +90,8 @@ class Combiner:
         Compute 4 Image Corners Locations
         Idea: Same process as warpPerspectiveWithPadding() excewpt we have to consider the sizes of two images. Might be cleaner as a function.
         '''
-        height1,width1 = image1.shape[:2]
-        height2,width2 = image2.shape[:2]
+        height1, width1 = image1.shape[:2]
+        height2, width2 = image2.shape[:2]
         corners1 = np.float32(([0, 0], [0, height1],[width1, height1], [width1, 0]))
         corners2 = np.float32(([0, 0], [0, height2], [width2, height2], [width2, 0]))
         warpedCorners2 = np.zeros((4, 2))
