@@ -13,14 +13,14 @@ def importData(fileName,drone_location, imageDirectory):
     allImages = [] #list of cv::Mat aimghes
     with open(drone_location) as file: # Use file to refer to the file object
         dataMatrix = file.readlines()
-        for i,img in enumerate(dataMatrix):
+        for i, img in enumerate(dataMatrix):
             dataMatrix[i] = dataMatrix[i].split(',')
-            dataMatrix[i][5]=dataMatrix[i][5].replace("\n","" )
+            dataMatrix[i][5] = dataMatrix[i][5].replace("\n", "" )
     with open(fileName) as file: # Use file to refer to the file object
         fileNameMatrix = file.read()
         fileNameMatrix = fileNameMatrix.split(',')
-    for i in range(0,len(fileNameMatrix)): #read images
-        allImages.append(cv2.imread(os.path.join(imageDirectory,fileNameMatrix[i])))
+    for i in range(0, len(fileNameMatrix)): #read images
+        allImages.append(cv2.imread(os.path.join(imageDirectory, fileNameMatrix[i])))
     return allImages, dataMatrix
 
 def display(title, image):
