@@ -2,6 +2,14 @@ import cv2
 import numpy as np
 import os
 
+
+def resize_imgs(images_Set):
+    tiny_imgs = []
+    for img in images_Set:
+        tiny_imgs.append(cv2.resize(img, (0,0), fx=0.35, fy=0.35))
+    return tiny_imgs
+
+
 def importData(fileName,drone_location, imageDirectory):
     '''
     :param fileName: Name of the pose data file in string form e.g. "datasets/imageData.txt"

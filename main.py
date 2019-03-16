@@ -12,8 +12,9 @@ def main():
     write_img_dir_path = os.path.join(base_dataset_path, "results")
 
     all_images, data_matrix = util.importData(file_name, drone_location, image_directory)
-    all_images = all_images[:12]
-    data_matrix = data_matrix[:12]
+    all_images = all_images[:9]
+    data_matrix = data_matrix[:9]
+    all_images = util.resize_imgs(all_images)
     my_combiner = Combiner.Combiner(all_images, data_matrix)
     result = my_combiner.createMosaic()
     util.display("RESULT", result)

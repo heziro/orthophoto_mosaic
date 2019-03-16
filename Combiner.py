@@ -4,6 +4,7 @@ import utilities as util
 import geometry as gm
 import copy
 import time
+import os
 
 class Combiner:
     def __init__(self, imageList_, dataMatrix_):
@@ -24,11 +25,15 @@ class Combiner:
             self.imageList.append(correctedImage) #store only corrected images to use in combination
         self.resultImage = self.imageList[0]
     def createMosaic(self):
+        base_dataset_path = os.path.join(os.getcwd(), "datasets", "images")
+        write_img_dir_path = os.path.join(base_dataset_path, "results")
         start_time = time.time() # start counting time
         for i in range(1, len(self.imageList)):
             print("elapsed time: {0}".format(time.time()-start_time))
             print("image number: {0} \n".format(i))
             self.combine(i)
+            if i > 1:
+                cv2.imwrite(os.path.join(write_img_dir_path, "mid_res_tiny_part1_{0}.png".format(i)), self.resultImage)
         return self.resultImage
 
     def combine(self, index2):
