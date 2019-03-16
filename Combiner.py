@@ -3,6 +3,7 @@ import numpy as np
 import utilities as util
 import geometry as gm
 import copy
+import time
 
 class Combiner:
     def __init__(self, imageList_, dataMatrix_):
@@ -23,7 +24,10 @@ class Combiner:
             self.imageList.append(correctedImage) #store only corrected images to use in combination
         self.resultImage = self.imageList[0]
     def createMosaic(self):
+        start_time = time.time() # start counting time
         for i in range(1, len(self.imageList)):
+            print("elapsed time: {0}".format(time.time()-start_time))
+            print("image number: {0} \n".format(i))
             self.combine(i)
         return self.resultImage
 
@@ -42,46 +46,57 @@ class Combiner:
         Descriptor computation and matching.
         Idea: Align the images by aligning features.
         '''
-        detector = cv2.xfeatures2d.SURF_create()
+        detector = cv2.xfeatures2d.SIFT_create()
 
-        # detector = cv2.SURF(500) #SURF showed best results
-        # detector.extended = True
-        gray1 = cv2.cvtColor(image1,cv2.COLOR_BGR2GRAY)
-        ret1, mask1 = cv2.threshold(gray1,1,255,cv2.THRESH_BINARY)
-        kp1, descriptors1 = detector.detectAndCompute(gray1,mask1) #kp = keypoints
+        gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+        ret1, mask1 = cv2.threshold(gray1, 1, 255, cv2.THRESH_BINARY)  # creating a mask
+        kp1, descriptors1 = detector.detectAndCompute(gray1,mask1)     #kp = keypoints
 
-        gray2 = cv2.cvtColor(image2,cv2.COLOR_BGR2GRAY)
-        ret2, mask2 = cv2.threshold(gray2,1,255,cv2.THRESH_BINARY)
-        kp2, descriptors2 = detector.detectAndCompute(gray2,mask2)
+        gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+        ret2, mask2 = cv2.threshold(gray2, 1, 255, cv2.THRESH_BINARY)
+        kp2, descriptors2 = detector.detectAndCompute(gray2, mask2)
+        
 
         #Visualize matching procedure.
-        keypoints1Im = cv2.drawKeypoints(image1,kp1,None,color=(0,0,255))
+        keypoints1Im = cv2.drawKeypoints(image1, kp1, None, color=(0, 0, 255))
         # util.display("KEYPOINTS1",keypoints1Im)
-        keypoints2Im = cv2.drawKeypoints(image2,kp2,None,color=(0,0,255))
+        keypoints2Im = cv2.drawKeypoints(image2, kp2, None, color=(0, 0, 255))
         # util.display("KEYPOINTS2",keypoints2Im)
 
+        print("finding matches.. \n")
         matcher = cv2.BFMatcher() #use brute force matching
         matches = matcher.knnMatch(descriptors2,descriptors1, k=2) #find pairs of nearest matches
+
+        # TODO
+        # take the first 4 best features!!!
+        #         
+
+
+        print("{0} matches found \n".format(len(matches)))
         #prune bad matches
         good = []
         for m,n in matches:
-            if m.distance < 0.55*n.distance:
+            if m.distance < 0.8*n.distance:
                 good.append(m)
         matches = copy.copy(good)
+
+        print("{0} *good* matches found \n".format(len(good)))
+
 
         #Visualize matches
         matchDrawing = util.drawMatches(gray2,kp2,gray1,kp1,matches)
         # util.display("matches",matchDrawing)
 
         #NumPy syntax for extracting location data from match data structure in matrix form
-        src_pts = np.float32([ kp2[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
-        dst_pts = np.float32([ kp1[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+        src_pts = np.float32([ kp2[m.queryIdx].pt for m in matches ]).reshape(-1, 1, 2)
+        dst_pts = np.float32([ kp1[m.trainIdx].pt for m in matches ]).reshape(-1, 1, 2)
+
 
         '''
         Compute Affine Transform
         Idea: Because we corrected for camera orientation, an affine transformation *should* be enough to align the images
         '''
-        A = cv2.estimateRigidTransform(src_pts, dst_pts, fullAffine=False) #false because we only want 5 DOF. we removed 3 DOF when we unrotated
+        # A = cv2.estimateRigidTransform(src_pts, dst_pts, fullAffine=False) #false because we only want 5 DOF. we removed 3 DOF when we unrotated
         if 1 == 1: #A == None: #RANSAC sometimes fails in estimateRigidTransform(). If so, try full homography. OpenCV RANSAC implementation for homography is more robust.
             HomogResult = cv2.findHomography(src_pts, dst_pts, method=cv2.RANSAC)
             H = HomogResult[0]
@@ -127,9 +142,9 @@ class Combiner:
         mask3 = np.float32(mask1)/255
 
         #apply mask
-        warpedImage2[:,:,0] = warpedImage2[:,:,0]*mask3
-        warpedImage2[:,:,1] = warpedImage2[:,:,1]*mask3
-        warpedImage2[:,:,2] = warpedImage2[:,:,2]*mask3
+        warpedImage2[:, :, 0] = warpedImage2[:, :, 0]*mask3
+        warpedImage2[:, :, 1] = warpedImage2[:, :, 1]*mask3
+        warpedImage2[:, :, 2] = warpedImage2[:, :, 2]*mask3
 
         result = warpedResImg + warpedImage2
         #visualize and save result

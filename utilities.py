@@ -32,7 +32,7 @@ def display(title, image):
     '''
 
     cv2.namedWindow(title,cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(title,1920,1080)
+    cv2.resizeWindow(title,1920*0.5,1080*0.5)
     cv2.imshow(title,image)
     cv2.waitKey()
     cv2.destroyWindow(title)
