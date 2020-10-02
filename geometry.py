@@ -28,9 +28,12 @@ def computeUnRotMatrix(pose):
     R[0,2] = 0
     R[1,2] = 0
     R[2,2] = 1
+    R[2,0] = 0
+    R[2,1] = 0
     Rtrans = R.transpose()
     InvR = np.linalg.inv(Rtrans)
     #Return inverse of R matrix so that when applied, the transformation undoes R.
+    InvR = R
     return InvR
 
 def warpPerspectiveWithPadding(image,transformation):
@@ -44,6 +47,9 @@ def warpPerspectiveWithPadding(image,transformation):
 
     height = image.shape[0]
     width = image.shape[1]
+
+    
+
     corners = np.float32([[0,0],[0,height],[width,height],[width,0]]).reshape(-1,1,2) #original corner locations
 
     warpedCorners = cv2.perspectiveTransform(corners, transformation) #warped corner locations
@@ -53,3 +59,75 @@ def warpPerspectiveWithPadding(image,transformation):
     fullTransformation = np.dot(translation,transformation) #compose warp and translation in correct order
     result = cv2.warpPerspective(image, fullTransformation, (xMax-xMin, yMax-yMin))
     return result
+
+
+def rotx(theta):
+    """
+    Rotation about X-axis
+    
+    @type theta: number
+    @param theta: the rotation angle
+    @rtype: 3x3 orthonormal matrix
+    @return: rotation about X-axis
+    @see: L{roty}, L{rotz}, L{rotvec}
+    """
+    
+    ct = cos(theta)
+    st = sin(theta)
+    return mat([[1,  0,    0],
+            [0,  ct, -st],
+            [0,  st,  ct]])
+
+def roty(theta):
+    """
+    Rotation about Y-axis
+    
+    @type theta: number
+    @param theta: the rotation angle
+    @rtype: 3x3 orthonormal matrix
+    @return: rotation about Y-axis
+    @see: L{rotx}, L{rotz}, L{rotvec}
+    """
+    
+    ct = cos(theta)
+    st = sin(theta)
+
+    return mat([[ct,   0,   st],
+            [0,    1,    0],
+            [-st,  0,   ct]])
+
+def rotz(theta):
+    """
+    Rotation about Z-axis
+    
+    @type theta: number
+    @param theta: the rotation angle
+    @rtype: 3x3 orthonormal matrix
+    @return: rotation about Z-axis
+    @see: L{rotx}, L{roty}, L{rotvec}
+    """
+    
+    ct = cos(theta)
+    st = sin(theta)
+
+    return mat([[ct,      -st,  0],
+            [st,       ct,  0],
+            [ 0,    0,  1]])
+
+
+def projection(img, gps):
+    size_image = img.shape
+    Fx = 2100
+    Fy = 2100
+    s = 0
+    y0 = size_image(1)/2
+    x0 = size_image(2)/2
+    K=[[Fx, s, x0],[ 0, Fy, y0],[ 0, 0, 1]]
+    kInv= np.linalg.inv(K)
+    x=0  # gps[0]  # pitch should be the same
+    y=2  # gps[1]  # roll should be the opposite
+    z=-4 # gps[2]  # yaw should be the same
+
+    H = K*rotz(z)*roty(y)*rotx(x)*kInv; 
+    # tform = projective2d(H');
+    # outputImage = imwarp(img,tform,'OutputView',imref2d(2*sizeImg));
